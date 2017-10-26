@@ -26,12 +26,6 @@ UKF::UKF() {
   // Sigma point spreading parameter
   lambda_ = 3 - n_aug_;
 
-  // initial state vector
-  x_ = VectorXd(n_x_);
-
-  // initial covariance matrix
-  P_ = MatrixXd(n_x_, n_x_);
-
   // Process noise standard deviation longitudinal acceleration in m/s^2
   std_a_ = 3;
 
@@ -72,10 +66,16 @@ UKF::UKF() {
   Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
 
   // time when the state is true, in us
-  time_us_ = 1000000;  // 1s
+  time_us_ = 1000000;  // 1s TODO: Do I need to init this here?
 
-  x_.fill(0.0);
-  P_.fill(0.0);
+  // initial state vector
+  x_ = VectorXd(n_x_);
+  
+  // initial covariance matrix
+  P_ = MatrixXd(n_x_, n_x_);
+  P_.setIdentity();
+
+  is_initialized_ = false;
 }
 
 UKF::~UKF() {}
@@ -91,6 +91,27 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   Complete this function! Make sure you switch between lidar and radar
   measurements.
   */
+  if (!is_initialized_) {
+    // first measurement
+    cout << "UKF: " << endl;
+
+    if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+      float rho = meas_package.raw_measurements_[0];
+      float phi = meas_package.raw_measurements_[1];
+      float rho_dot = meas_package.raw_measurements_[2];
+      x_ << rho*cos(phi), rho*sin(phi), 0 , 0, 0;
+    }
+    else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+      x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0, 0;
+    }
+
+    // TODO: Add previous time here
+
+    is_initialized_ = true;
+    return;
+  }
+  
+
 }
 
 /**
