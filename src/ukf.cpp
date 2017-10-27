@@ -65,9 +65,6 @@ UKF::UKF() {
   // predicted sigma points matrix
   Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
 
-  // time when the state is true, in us
-  time_us_ = 1000000;  // 1s TODO: Do I need to init this here?
-
   // initial state vector
   x_ = VectorXd(n_x_);
   
@@ -105,13 +102,31 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0, 0;
     }
 
-    // TODO: Add previous time here
+    time_us_ = meas_package.timestamp_;
 
     is_initialized_ = true;
     return;
   }
   
+  //compute the time elapsed between the current and previous measurements
+  float dt = (meas_package.timestamp_ - time_us_) / 1000000.0;	//dt - expressed in seconds
+  time_us_ = meas_package.timestamp_;
 
+  // Predict
+  Prediction(dt);
+
+  // Update
+  if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+    // Radar updates
+    UpdateRadar(meas_package);
+  } else {
+    // Laser updates
+    UpdateLidar(meas_package);
+  }
+
+  // print the output
+  cout << "x_ = " << x_ << endl;
+  cout << "P_ = " << P_ << endl;
 }
 
 /**
@@ -126,6 +141,12 @@ void UKF::Prediction(double delta_t) {
   Complete this function! Estimate the object's location. Modify the state
   vector, x_. Predict sigma points, the state, and the state covariance matrix.
   */
+  // Generate sigma points
+
+  // Predict sigma points
+
+  // Predict mean x_ and covariance P_
+
 }
 
 /**
@@ -141,6 +162,10 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   You'll also need to calculate the lidar NIS.
   */
+  // Predict measurement
+
+  // Update state
+
 }
 
 /**
@@ -156,4 +181,8 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
   You'll also need to calculate the radar NIS.
   */
+  // Predict measurement
+
+  // Update state
+  
 }
