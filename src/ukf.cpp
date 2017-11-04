@@ -92,7 +92,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       float rho = meas_package.raw_measurements_[0];
       float phi = meas_package.raw_measurements_[1];
       float rho_dot = meas_package.raw_measurements_[2];
-      x_ << rho*cos(phi), rho*sin(phi), 0 , 0, 0;
+      x_ << rho*cos(phi), rho*sin(phi), 0, 0, 0;
     }
     else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
       x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0, 0;
@@ -114,9 +114,11 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   // Update
   if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
+    cout << "Updating radar" << endl;
     UpdateRadar(meas_package);
   } else {
     // Laser updates
+    cout << "Updating laser" << endl;
     UpdateLidar(meas_package);
   }
 
@@ -130,7 +132,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
  * @param {double} delta_t the change in time (in seconds) between the last
  * measurement and this one.
  */
-void UKF::Prediction(double delta_t) {
+void UKF::Prediction(double delta_t) {  // FIXME: Xsig_pred_(3) grows v. large
   /**
   Complete this function! Estimate the object's location. Modify the state
   vector, x_. Predict sigma points, the state, and the state covariance matrix.
@@ -216,7 +218,7 @@ void UKF::Prediction(double delta_t) {
   for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
     x_ = x_ + weights_(i) * Xsig_pred_.col(i);
   }
-
+  
   //predicted state covariance matrix P_
   for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
 
@@ -225,9 +227,10 @@ void UKF::Prediction(double delta_t) {
     //angle normalization
     while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
     while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
-
+    
     P_ = P_ + weights_(i) * x_diff * x_diff.transpose() ;
   }
+  cout << "Predicted location" << endl;
 }
 
 /**
@@ -236,8 +239,6 @@ void UKF::Prediction(double delta_t) {
  */
 void UKF::UpdateLidar(MeasurementPackage meas_package) {
   /**
-  TODO:
-
   Complete this function! Use lidar data to update the belief about the object's
   position. Modify the state vector, x_, and covariance, P_.
 
@@ -288,7 +289,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   // Update State
   //create matrix for cross correlation Tc
   MatrixXd Tc = MatrixXd(n_x_, n_z);
-  
+
   //calculate cross correlation matrix
   Tc.fill(0.0);
   for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 simga points
